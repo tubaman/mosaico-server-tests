@@ -15,9 +15,10 @@ class MosaicoServerTestCase(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(MosaicoServerTestCase, self).__init__(*args, **kwargs)
-        self.base_url = os.environ.get("BASE_URL", "http://127.0.0.1:9006")
-        self.upload_dir = os.environ.get("UPLOAD_DIR", None)
-        self.photo = os.environ.get("PHOTO", None)
+        self.base_url = os.environ.get("MOSAICO_URL", "http://127.0.0.1:9006")
+        mosaico_dir = os.environ.get("MOSAICO_DIR", None)
+        self.upload_dir = os.path.join(mosaico_dir, 'uploads')
+        self.photo = os.environ.get("TEST_PHOTO", None)
 
     def clear_uploads(self):
         to_remove = glob(os.path.join(self.upload_dir, '*.png'))
