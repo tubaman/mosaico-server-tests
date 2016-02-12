@@ -1,14 +1,8 @@
 import os
-import logging
 import unittest
-import posixpath
-from shutil import rmtree
 from glob import glob
 
 import requests
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class MosaicoServerTestCase(unittest.TestCase):
@@ -30,12 +24,12 @@ class MosaicoServerTestCase(unittest.TestCase):
 class TestImage(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = posixpath.join(self.base_url, 'img/')
+        self.url = '/'.join([self.base_url, 'img/'])
 
     def do_upload(self):
         self.clear_uploads()
         files = {'file': open(self.photo, 'rb')}
-        upload_url = posixpath.join(self.base_url, 'upload/')
+        upload_url = '/'.join([self.base_url, 'upload/'])
         response = requests.post(upload_url, files=files)
         self.assertEquals(response.status_code, 200)
         uploads = response.json()['files']
@@ -48,7 +42,7 @@ class TestImage(MosaicoServerTestCase):
         }
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.headers['Content-Type'], 'image/png')
+        self.assertTrue(response.headers['Content-Type'].startswith('image/'))
 
     def test_cover(self):
         uploads = self.do_upload()
@@ -59,7 +53,7 @@ class TestImage(MosaicoServerTestCase):
         }
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.headers['Content-Type'], 'image/png')
+        self.assertTrue(response.headers['Content-Type'].startswith('image/'))
 
     def test_resize(self):
         uploads = self.do_upload()
@@ -70,13 +64,13 @@ class TestImage(MosaicoServerTestCase):
         }
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.headers['Content-Type'], 'image/png')
+        self.assertTrue(response.headers['Content-Type'].startswith('image/'))
 
 
 class TestUpload(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = posixpath.join(self.base_url, 'upload/')
+        self.url = '/'.join([self.base_url, 'upload/'])
         self.clear_uploads()
 
     def test_upload(self):
@@ -84,14 +78,12 @@ class TestUpload(MosaicoServerTestCase):
         files = {'file': photo_file}
         response = requests.post(self.url, files=files)
         photo_filename = os.path.basename(photo_file.name)
-        # don't use posixpath.join here because it's too smart.
-        # this url requires a double slash
+        # this url has a double slash
         delete_url = '/'.join([self.base_url, 'upload/', photo_filename])
-        thumbnail_url = posixpath.join(self.base_url, 'uploads', 'thumbnail', photo_filename)
-        url = posixpath.join(self.base_url, 'uploads', photo_filename)
+        thumbnail_url = '/'.join([self.base_url, 'uploads', 'thumbnail', photo_filename])
+        url = '/'.join([self.base_url, 'uploads', photo_filename])
         self.assertEquals(response.status_code, 200)
         data = response.json()
-        logger.debug("data: %r", data)
         file_data = data['files'][0]
         self.assertEquals(file_data['deleteType'], 'DELETE')
         self.assertEquals(file_data['deleteUrl'], delete_url)
@@ -106,7 +98,7 @@ class TestUpload(MosaicoServerTestCase):
 class TestDownload(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = posixpath.join(self.base_url, 'dl/')
+        self.url = '/'.join([self.base_url, 'dl/'])
 
     def test_email(self):
         data = {
