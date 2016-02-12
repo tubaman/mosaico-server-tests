@@ -16,8 +16,8 @@ class MosaicoServerTestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(MosaicoServerTestCase, self).__init__(*args, **kwargs)
         self.base_url = os.environ.get("BASE_URL", "http://127.0.0.1:9006")
-        self.upload_dir = os.environ.get("UPLOAD_DIR", "/home/tubaman/sandboxes/mosaico/uploads")
-        self.photo = os.environ.get("PHOTO", "/home/tubaman/Pictures/smartprompt_play_store.png")
+        self.upload_dir = os.environ.get("UPLOAD_DIR", None)
+        self.photo = os.environ.get("PHOTO", None)
 
     def clear_uploads(self):
         to_remove = glob(os.path.join(self.upload_dir, '*.png'))
