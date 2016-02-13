@@ -74,7 +74,7 @@ class TestUpload(MosaicoServerTestCase):
         self.url = '/'.join([self.base_url, 'upload/'])
         self.clear_uploads()
 
-    def assertIsValidURL(self, url):
+    def assertValidURL(self, url):
         parts = urlsplit(url)
         if not any([parts.netloc, parts.path]):
             raise AssertionError("%s is not a URL" % url)
@@ -88,13 +88,13 @@ class TestUpload(MosaicoServerTestCase):
         data = response.json()
         file_data = data['files'][0]
         self.assertEquals(file_data['deleteType'], 'DELETE')
-        self.assertIsValidURL(file_data['deleteUrl'])
+        self.assertValidURL(file_data['deleteUrl'])
         self.assertNotEquals(file_data['name'], '')
         self.assertEquals(file_data['originalName'], photo_filename)
         self.assertEquals(file_data['size'], os.path.getsize(self.photo))
-        self.assertIsValidURL(file_data['thumbnailUrl'])
+        self.assertValidURL(file_data['thumbnailUrl'])
         self.assertEquals(file_data['type'], None)
-        self.assertIsValidURL(file_data['url'])
+        self.assertValidURL(file_data['url'])
 
 
 class TestDownload(MosaicoServerTestCase):
