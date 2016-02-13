@@ -1,6 +1,7 @@
 import os
 import unittest
 from glob import glob
+from urlparse import urlsplit
 
 import requests
 
@@ -73,26 +74,27 @@ class TestUpload(MosaicoServerTestCase):
         self.url = '/'.join([self.base_url, 'upload/'])
         self.clear_uploads()
 
+    def assertIsValidURL(self, url):
+        parts = urlsplit(url)
+        if not any([parts.netloc, parts.path]):
+            raise AssertionError("%s is not a URL" % url)
+
     def test_upload(self):
         photo_file = open(self.photo, 'rb')
         files = {'file': photo_file}
         response = requests.post(self.url, files=files)
         photo_filename = os.path.basename(photo_file.name)
-        # this url has a double slash
-        delete_url = '/'.join([self.base_url, 'upload/', photo_filename])
-        thumbnail_url = '/'.join([self.base_url, 'uploads', 'thumbnail', photo_filename])
-        url = '/'.join([self.base_url, 'uploads', photo_filename])
         self.assertEquals(response.status_code, 200)
         data = response.json()
         file_data = data['files'][0]
         self.assertEquals(file_data['deleteType'], 'DELETE')
-        self.assertEquals(file_data['deleteUrl'], delete_url)
-        self.assertEquals(file_data['name'], photo_filename)
+        self.assertIsValidURL(file_data['deleteUrl'])
+        self.assertNotEquals(file_data['name'], '')
         self.assertEquals(file_data['originalName'], photo_filename)
         self.assertEquals(file_data['size'], os.path.getsize(self.photo))
-        self.assertEquals(file_data['thumbnailUrl'], thumbnail_url)
+        self.assertIsValidURL(file_data['thumbnailUrl'])
         self.assertEquals(file_data['type'], None)
-        self.assertEquals(file_data['url'], url)
+        self.assertIsValidURL(file_data['url'])
 
 
 class TestDownload(MosaicoServerTestCase):
