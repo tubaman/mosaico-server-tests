@@ -4,6 +4,7 @@ from glob import glob
 from urlparse import urlsplit
 
 import requests
+from bs4 import BeautifulSoup
 
 
 class MosaicoServerTestCase(unittest.TestCase):
@@ -102,12 +103,18 @@ class TestDownload(MosaicoServerTestCase):
     def setUp(self):
         self.url = '/'.join([self.base_url, 'dl/'])
 
+    def assertValidHTML(self, html):
+        try:
+            soup = BeautifulSoup(html, "html.parser")
+        except:
+            raise AssertionError("Invalid HTML: %s" % html)
+
     def test_email(self):
         data = {
             'action': 'email',
             'rcpt': 'example@example.org',
             'subject': 'test subject',
-            'html': "<html></html>",
+            'html': "<html><head></head><body><p></p></body></html>",
         }
         response = requests.post(self.url, data=data)
         self.assertEquals(response.status_code, 200)
@@ -117,10 +124,10 @@ class TestDownload(MosaicoServerTestCase):
         data = {
             'action': 'download',
             'filename': 'email.html',
-            'html': "<html></html>",
+            'html': "<html><head></head><body><p></p></body></html>",
         }
         response = requests.post(self.url, data=data)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.headers['Content-disposition'], "attachment; filename=email.html")
         self.assertEquals(response.headers['Content-type'], 'text/html')
-        self.assertEquals(response.text, data['html'])
+        self.assertValidHTML(response.text)
