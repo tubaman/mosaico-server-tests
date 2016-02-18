@@ -2,9 +2,11 @@ import os
 import unittest
 from glob import glob
 from urlparse import urlsplit
+from StringIO import StringIO
 
 import requests
 from bs4 import BeautifulSoup
+from PIL import Image
 
 
 class MosaicoServerTestCase(unittest.TestCase):
@@ -56,6 +58,8 @@ class TestImage(MosaicoServerTestCase):
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.headers['Content-Type'].startswith('image/'))
+        image = Image.open(StringIO(response.content))
+        self.assertEqual(image.size[0], 166)
 
     def test_resize(self):
         uploads = self.do_upload()
@@ -67,6 +71,8 @@ class TestImage(MosaicoServerTestCase):
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.headers['Content-Type'].startswith('image/'))
+        image = Image.open(StringIO(response.content))
+        self.assertEqual(image.size[0], 166)
 
 
 class TestUpload(MosaicoServerTestCase):
