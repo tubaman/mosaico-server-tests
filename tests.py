@@ -1,5 +1,6 @@
 import os
 import unittest
+import posixpath
 from glob import glob
 from urlparse import urlsplit
 from StringIO import StringIO
@@ -28,12 +29,12 @@ class MosaicoServerTestCase(unittest.TestCase):
 class TestImage(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = '/'.join([self.base_url, 'img/'])
+        self.url = posixpath.join(self.base_url, 'img/')
 
     def do_upload(self):
         self.clear_uploads()
         files = {'file': open(self.photo, 'rb')}
-        upload_url = '/'.join([self.base_url, 'upload/'])
+        upload_url = posixpath.join(self.base_url, 'upload/')
         response = requests.post(upload_url, files=files)
         self.assertEquals(response.status_code, 200)
         uploads = response.json()['files']
@@ -78,7 +79,7 @@ class TestImage(MosaicoServerTestCase):
 class TestUpload(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = '/'.join([self.base_url, 'upload/'])
+        self.url = posixpath.join(self.base_url, 'upload/')
         self.clear_uploads()
 
     def assertValidURL(self, url):
@@ -107,7 +108,7 @@ class TestUpload(MosaicoServerTestCase):
 class TestDownload(MosaicoServerTestCase):
 
     def setUp(self):
-        self.url = '/'.join([self.base_url, 'dl/'])
+        self.url = posixpath.join(self.base_url, 'dl/')
 
     def assertValidHTML(self, html):
         try:
