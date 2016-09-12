@@ -15,15 +15,7 @@ class MosaicoServerTestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(MosaicoServerTestCase, self).__init__(*args, **kwargs)
         self.base_url = os.environ.get("MOSAICO_URL", "http://127.0.0.1:9006")
-        mosaico_dir = os.environ["MOSAICO_DIR"]
-        self.upload_dir = os.path.join(mosaico_dir, 'uploads')
-        self.photo = os.environ["TEST_PHOTO"]
-
-    def clear_uploads(self):
-        to_remove = glob(os.path.join(self.upload_dir, '*.png'))
-        to_remove += glob(os.path.join(self.upload_dir, '*.jpg'))
-        to_remove += glob(os.path.join(self.upload_dir, 'thumbnail', '*'))
-        [os.remove(f) for f in to_remove]
+        self.photo_path = os.path.join(os.path.dirname(__file__), 'test.png')
 
 
 class TestImage(MosaicoServerTestCase):
@@ -32,15 +24,12 @@ class TestImage(MosaicoServerTestCase):
         self.url = posixpath.join(self.base_url, 'img/')
 
     def do_upload(self):
-        # TODO: why do we need this?  Test against the nodejs and django
-        # servers without it and see what happens.
-        self.clear_uploads()
-        files = {'file': open(self.photo, 'rb')}
+        files = {'file': open(self.photo_path, 'rb')}
         upload_url = posixpath.join(self.base_url, 'upload/')
         response = requests.post(upload_url, files=files)
         self.assertEquals(response.status_code, 200)
-        uploads = response.json()['files']
-        return uploads
+        upload, = response.json()['files']
+        return upload
 
     def test_placeholder(self):
         params = {
@@ -50,25 +39,46 @@ class TestImage(MosaicoServerTestCase):
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.headers['Content-Type'].startswith('image/'))
+        image = Image.open(StringIO(response.content))
+        self.assertEqual(image.size, (166, 130))
 
     def test_cover(self):
-        uploads = self.do_upload()
+        upload = self.do_upload()
+        photo = Image.open(open(self.photo_path, 'rb'))
+        new_size = tuple([d/2 for d in photo.size])
         params = {
             'method': 'cover',
-            'src': uploads[0]['url'],
-            'params': '166,null',
+            'src': upload['url'],
+            'params': ','.join([str(d) for d in new_size]),
         }
         response = requests.get(self.url, params)
         self.assertEquals(response.status_code, 200)
         self.assertTrue(response.headers['Content-Type'].startswith('image/'))
         image = Image.open(StringIO(response.content))
-        self.assertEqual(image.size[0], 166)
+        self.assertEqual(image.size, new_size)
+
+    def test_cover_one_null(self):
+        """Cover shouldn't resize when a null is passed as a size param"""
+        upload = self.do_upload()
+        photo = Image.open(open(self.photo_path, 'rb'))
+        new_width = photo.size[0] / 2
+        params = {
+            'method': 'cover',
+            'src': upload['url'],
+            'params': "%d,null" % new_width,
+        }
+        response = requests.get(self.url, params)
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(response.headers['Content-Type'].startswith('image/'))
+        image = Image.open(StringIO(response.content))
+        self.assertEqual(image.size, photo.size)
+
 
     def test_resize(self):
-        uploads = self.do_upload()
+        upload = self.do_upload()
         params = {
             'method': 'resize',
-            'src': uploads[0]['url'],
+            'src': upload['url'],
             'params': '166,null',
         }
         response = requests.get(self.url, params)
@@ -82,9 +92,6 @@ class TestUpload(MosaicoServerTestCase):
 
     def setUp(self):
         self.url = posixpath.join(self.base_url, 'upload/')
-        # TODO: why do we need this?  Test against the nodejs and django
-        # servers without it and see what happens.
-        self.clear_uploads()
 
     def assertValidURL(self, url):
         parts = urlsplit(url)
@@ -92,7 +99,7 @@ class TestUpload(MosaicoServerTestCase):
             raise AssertionError("%s is not a URL" % url)
 
     def test_upload(self):
-        photo_file = open(self.photo, 'rb')
+        photo_file = open(self.photo_path, 'rb')
         files = {'file': photo_file}
         response = requests.post(self.url, files=files)
         photo_filename = os.path.basename(photo_file.name)
@@ -103,7 +110,7 @@ class TestUpload(MosaicoServerTestCase):
         self.assertValidURL(file_data['deleteUrl'])
         self.assertNotEquals(file_data['name'], '')
         self.assertEquals(file_data['originalName'], photo_filename)
-        self.assertEquals(file_data['size'], os.path.getsize(self.photo))
+        self.assertEquals(file_data['size'], os.path.getsize(self.photo_path))
         self.assertValidURL(file_data['thumbnailUrl'])
         self.assertEquals(file_data['type'], None)
         self.assertValidURL(file_data['url'])
