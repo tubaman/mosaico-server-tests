@@ -18,6 +18,8 @@ Inside the virtualenv set the following environment variables:
    * `TEST_PHOTO` - This is the path to the image used for testing.  It should
      be a jpg or png.  You *must* explicitly set this one.
 
+TODO: check in a standard test photo so we can remove the `TEST_PHOTO` env var.
+
 then run: `nosetests`
 
 Note: This test suite must be run locally on the server where mosaico
