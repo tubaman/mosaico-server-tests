@@ -32,6 +32,8 @@ class TestImage(MosaicoServerTestCase):
         self.url = posixpath.join(self.base_url, 'img/')
 
     def do_upload(self):
+        # TODO: why do we need this?  Test against the nodejs and django
+        # servers without it and see what happens.
         self.clear_uploads()
         files = {'file': open(self.photo, 'rb')}
         upload_url = posixpath.join(self.base_url, 'upload/')
@@ -80,6 +82,8 @@ class TestUpload(MosaicoServerTestCase):
 
     def setUp(self):
         self.url = posixpath.join(self.base_url, 'upload/')
+        # TODO: why do we need this?  Test against the nodejs and django
+        # servers without it and see what happens.
         self.clear_uploads()
 
     def assertValidURL(self, url):
