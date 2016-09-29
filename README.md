@@ -3,6 +3,11 @@
 These are tests for the Mosaico backend API endpoints.  Developers can
 use these to verify their own server implementations.
 
+These tests pass against [mosaico
+v0.15](https://github.com/voidlabs/mosaico/releases/tag/v0.15)
+and [django-mosaico
+g11825a0](https://github.com/tubaman/django-mosaico/commit/11825a0).
+
 ## Setup
 
 Inside a virtualenv, run: `pip install -r requirements`
