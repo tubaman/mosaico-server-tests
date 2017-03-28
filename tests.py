@@ -57,23 +57,6 @@ class TestImage(MosaicoServerTestCase):
         image = Image.open(StringIO(response.content))
         self.assertEqual(image.size, new_size)
 
-    def test_cover_one_null(self):
-        """Cover shouldn't resize when a null is passed as a size param"""
-        upload = self.do_upload()
-        photo = Image.open(open(self.photo_path, 'rb'))
-        new_width = photo.size[0] / 2
-        params = {
-            'method': 'cover',
-            'src': upload['url'],
-            'params': "%d,null" % new_width,
-        }
-        response = requests.get(self.url, params)
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(response.headers['Content-Type'].startswith('image/'))
-        image = Image.open(StringIO(response.content))
-        self.assertEqual(image.size, photo.size)
-
-
     def test_resize(self):
         upload = self.do_upload()
         params = {
